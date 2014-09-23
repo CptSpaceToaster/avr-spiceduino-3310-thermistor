@@ -17,14 +17,22 @@
 
 #include <avr/pgmspace.h>
 
+/* Alias to point to the register that implements SPI */
+#define PORTLCD                    PORTB
 
-#define SET_DC_PIN                 PORTB |= 0x01  
-#define CLEAR_DC_PIN               PORTB &= ~0x01 
-#define SET_SCE_PIN                PORTB |= 0x04
-#define CLEAR_SCE_PIN              PORTB &= ~0x04
-#define SET_RST_PIN                PORTB |= 0x10
-#define CLEAR_RST_PIN              PORTB |= 0x10
+/*  Pin placement in the registers - Change accordingly */
+#define LCD_DC_PIN                 0
+#define LCD_CE_PIN                 2
+#define SPI_MOSI_PIN               3
+#define LCD_RST_PIN                4
+#define SPI_CLK_PIN                5
 
+#define SET_DC_PIN                 PORTLCD |= _BV(LCD_DC_PIN)
+#define CLEAR_DC_PIN               PORTLCD &= ~_BV(LCD_DC_PIN)
+#define SET_SCE_PIN                PORTLCD |= _BV(LCD_CE_PIN)
+#define CLEAR_SCE_PIN              PORTLCD &= ~_BV(LCD_CE_PIN)
+#define SET_RST_PIN                PORTLCD |= _BV(LCD_RST_PIN)
+#define CLEAR_RST_PIN              PORTLCD &= ~_BV(LCD_RST_PIN)
  
 /*--------------------------------------------------------------------------------------------------
                                  Public function prototypes

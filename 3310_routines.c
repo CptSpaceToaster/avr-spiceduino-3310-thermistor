@@ -120,7 +120,7 @@ static const unsigned char smallFont[] PROGMEM =
      0x44, 0x28, 0x10, 0x28, 0x44,   // x
      0x0C, 0x50, 0x50, 0x50, 0x3C,   // y
      0x44, 0x64, 0x54, 0x4C, 0x44,   // z
-	 0x00, 0x06, 0x09, 0x09, 0x06    // ยบ
+	 0x00, 0x06, 0x09, 0x09, 0x06    // บ
 };
 
 
@@ -285,8 +285,8 @@ void spi_init(void)
 --------------------------------------------------------------------------------------------------*/
 void LCD_init ( void )
 {
+	PORTLCD |= _BV(LCD_DC_PIN) | _BV(LCD_CE_PIN) | _BV(SPI_MOSI_PIN) | _BV(LCD_RST_PIN) | _BV(SPI_CLK_PIN); // Set LCD pins as outputs
 	delay_ms(100);
-			  
 	CLEAR_SCE_PIN;    //Enable LCD
 				
 	CLEAR_RST_PIN;	//reset LCD
