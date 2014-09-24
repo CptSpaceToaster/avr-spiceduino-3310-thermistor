@@ -272,9 +272,9 @@ static const unsigned char number[13][3][16] PROGMEM = {
 --------------------------------------------------------------------------------------------------*/
 //SPI initialize
 //clock rate: 250000hz
-void spi_init(void)
+void spi_init( unsigned char reg )
 {
-	SPCR = 0x58; //setup SPI
+	SPCR = reg; //setup SPI
 }
 
 /*--------------------------------------------------------------------------------------------------
@@ -285,13 +285,10 @@ void spi_init(void)
 --------------------------------------------------------------------------------------------------*/
 void LCD_init ( void )
 {
-	PORTLCD |= _BV(LCD_DC_PIN) | _BV(LCD_CE_PIN) | _BV(SPI_MOSI_PIN) | _BV(LCD_RST_PIN) | _BV(SPI_CLK_PIN); // Set LCD pins as outputs
 	delay_ms(100);
 	CLEAR_SCE_PIN;    //Enable LCD
 				
-	CLEAR_RST_PIN;	//reset LCD
-	delay_ms(100);
-	SET_RST_PIN;
+	SET_RST_PIN;	//reset LCD
 			  
 	SET_SCE_PIN;	//disable LCD
 

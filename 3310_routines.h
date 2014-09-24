@@ -18,6 +18,7 @@
 #include <avr/pgmspace.h>
 
 /* Alias to point to the register that implements SPI */
+#define DDRLCD                     DDRB
 #define PORTLCD                    PORTB
 
 /*  Pin placement in the registers - Change accordingly */
@@ -27,7 +28,7 @@
 #define LCD_RST_PIN                4
 #define SPI_CLK_PIN                5
 
-#define SET_DC_PIN                 PORTLCD |= _BV(LCD_DC_PIN)
+#define SET_DC_PIN                 PORTLCD |= _BV(LCD_DC_PIN)  
 #define CLEAR_DC_PIN               PORTLCD &= ~_BV(LCD_DC_PIN)
 #define SET_SCE_PIN                PORTLCD |= _BV(LCD_CE_PIN)
 #define CLEAR_SCE_PIN              PORTLCD &= ~_BV(LCD_CE_PIN)
@@ -56,6 +57,6 @@ void LCD_drawBorder (void );
 void LCD_drawSplash (void );
 void LCD_drawSplashNoUpdate (void );
 void delay_ms ( int millisec );
-void spi_init(void);
+void spi_init( unsigned char reg );
 
 #endif  //  _3310_ROUTINES_H_

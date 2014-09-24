@@ -159,6 +159,9 @@ int main(void)
 	uint8_t tmp_string[] = "xx.x";
 	uint8_t i, j;
 
+	/* initialize port data directions */
+	DDRB = ALL_OUTPUT;
+	PORTB = 0xFF;
 	DDRD |= (1 << 7); // buzzer
 	DDRC &= ~(0x01); // temp sensor on AN2
 
@@ -172,13 +175,11 @@ int main(void)
 	TIMSK |= _BV(TOIE2); // enable timer/counter1 overflow interrupt
 
 	/* set up */
-	spi_init();
+	spi_init(0x58);
 	init_serial();
 
 	/* get LCD ready */
-	LCD_init(); // Sets data directions for PORTLCD (PORTB)
-	/* Set initial positions high */
-	PORTLCD = 0xFF;
+	LCD_init();
 	_delay_loop_2(65535);
 	LCD_clear();
 	LCD_drawSplash();
