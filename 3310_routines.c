@@ -11,26 +11,33 @@
 //Jan 2009
 //
 //********************************************************
-
 #include <avr/io.h>
 
+#include <util/delay.h>
 #include "3310_routines.h"
 #include "splash-temp.h"
+
+#ifndef WIDTH
+#  error "define WIDTH before 3310_routines.c"
+#endif
+#ifndef HEIGHT
+#  error "define HEIGHT before 3310_routines.c"
+#endif
 
 //global variable for remembering where to start writing the next text string on 3310 LCD
 unsigned char char_start;
 
 /* current cursor */
-static unsigned char cursor_row = 0; /* 0-6 */
-static unsigned char cursor_col = 0; /* 0-83 */
-static unsigned char lcd_buffer[8][84];
+static unsigned int cursor_row = 0; /* 0-6 */
+static unsigned int cursor_col = 0; /* 0-83 */
+static unsigned char lcd_buffer[HEIGHT/8][WIDTH];
 
 //***** Small fonts (5x7) **********
 
 static const unsigned char smallFont[] PROGMEM =
 {
      0x00, 0x00, 0x00, 0x00, 0x00,   // sp
-     0x00, 0x00, 0x2f, 0x00, 0x00,    // !
+     0x00, 0x00, 0x2f, 0x00, 0x00,   // !
      0x00, 0x07, 0x00, 0x07, 0x00,   // "
      0x14, 0x7f, 0x14, 0x7f, 0x14,   // #
      0x24, 0x2a, 0x7f, 0x2a, 0x12,   // $
@@ -274,6 +281,7 @@ static const unsigned char number[13][3][16] PROGMEM = {
 //clock rate: 250000hz
 void spi_init( unsigned char reg )
 {
+	DDRLCD |= _BV(LCD_DC_PIN) | _BV(LCD_CE_PIN) | _BV(SPI_MOSI_PIN) | _BV(LCD_RST_PIN) | _BV(SPI_CLK_PIN);
 	SPCR = reg; //setup SPI
 }
 
@@ -285,9 +293,10 @@ void spi_init( unsigned char reg )
 --------------------------------------------------------------------------------------------------*/
 void LCD_init ( void )
 {
-	delay_ms(100);
 	CLEAR_SCE_PIN;    //Enable LCD
-				
+
+	CLEAR_RST_PIN;
+	_delay_ms(100);
 	SET_RST_PIN;	//reset LCD
 			  
 	SET_SCE_PIN;	//disable LCD
@@ -356,12 +365,12 @@ void LCD_clear ( void )
 	
 	LCD_gotoXY (0,0);  	//start with (0,0) position
 
-	for(i=0; i<8; i++)
+	for(i=0; i<(HEIGHT/8); i++)
 	{
-		for(j=0; j<90; j++)
+		for(j=0; j<WIDTH; j++)
 		{
 			LCD_writeData( 0x00 );
-			if ((i < 6) && (j < 84))
+			if ((i < (HEIGHT/8)) && (j < WIDTH))
 				lcd_buffer[i][j] = 0x00;
 		}
 	}
@@ -376,10 +385,10 @@ void LCD_update( void )
 	
 	LCD_gotoXY (0,0);  	//start with (0,0) position
 
-	for(i=0; i<7; i++)
+	for(i=0; i<(HEIGHT/8); i++)
 	{
 		LCD_gotoXY (0,i);
-		for(j=0; j<84; j++)
+		for(j=0; j<WIDTH; j++)
 		{
 			LCD_writeData(lcd_buffer[i][j]);
 		}
@@ -393,11 +402,11 @@ void LCD_drawSplash( void )
 {
 	int i,j;
 	
-	for(i=0; i<7; i++)
+	for(i=0; i<(HEIGHT/8); i++)
 	{
-		for(j=0; j<84; j++)
+		for(j=0; j<WIDTH; j++)
 		{
-			lcd_buffer[i][j] = pgm_read_byte(&(splash[i][j]));
+			lcd_buffer[i][j] = pgm_read_byte(&(splash[i*WIDTH+j]));
 		}
 	}
    
@@ -409,11 +418,11 @@ void LCD_drawSplashNoUpdate( void )
 {
 	int i,j;
 	
-	for(i=0; i<7; i++)
+	for(i=0; i<HEIGHT/8; i++)
 	{
 		for(j=0; j<84; j++)
 		{
-			lcd_buffer[i][j] = pgm_read_byte(&(splash[i][j]));
+			lcd_buffer[i][j] = pgm_read_byte(&(splash[i*WIDTH+j]));
 		}
 	}
 }
@@ -499,10 +508,9 @@ void LCD_gotoXY ( unsigned char x, unsigned char y )
 void LCD_writeChar (unsigned char ch)
 {
 	unsigned char j;
-  
 	lcd_buffer[cursor_row][cursor_col] = 0x00;
 	for(j=0; j<5; j++)
-		lcd_buffer[cursor_row][cursor_col + j] |=  pgm_read_byte(&(smallFont [(ch-32)*5 + j] ));
+		lcd_buffer[cursor_row][cursor_col + j + 1] = pgm_read_byte(&(smallFont [(ch-32)*5 + j] ));
 
 	lcd_buffer[cursor_row][cursor_col + 6] = 0x00;
 
@@ -609,19 +617,19 @@ void LCD_drawBorder (void )
 {
 	unsigned char i, j;  
 	    
-	for(i=0; i<7; i++)
+	for(i=0; i<(WIDTH/8); i++)
 	{
 		LCD_gotoXY (0,i);
 			
 		for(j=0; j<84; j++)
 		{
-			if(j == 0 || j == 83) {
+			if(j == 0 || j == WIDTH-1) {
 				lcd_buffer[cursor_row][cursor_col + j] |= 0xff;
 			} else if(i == 0) {
-				lcd_buffer[cursor_row][cursor_col + j] |= 0x08;
+				lcd_buffer[cursor_row][cursor_col + j] |= 0x01;
 				//LCD_writeData (0x08);		// row 0 is having only 5 bits (not 8)
-			} else if(i == 6) {
-				lcd_buffer[cursor_row][cursor_col + j] |= 0x04;
+			} else if(i == (HEIGHT/8)-1) {
+				lcd_buffer[cursor_row][cursor_col + j] |= 0x80;
 				//LCD_writeData (0x04);		// row 6 is having only 3 bits (not 8)
 			} else {
 				lcd_buffer[cursor_row][cursor_col + j] |= 0x00;
